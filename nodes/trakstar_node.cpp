@@ -40,6 +40,8 @@
 // Visualization
 #include <tf/transform_broadcaster.h>
 
+#include <geometry_msgs/Pose.h>
+
 using namespace trakstar;
 using std::string;
 
@@ -129,6 +131,9 @@ int main(int argc, char **argv)
   // Initialize ROS stuff
   ros::Publisher trakstar_pub = n.advertise<trakstar::TrakstarMsg>("trakstar_msg", 1);
   ros::Publisher trakstar_raw_pub = n.advertise<trakstar::TrakstarMsg>("trakstar_raw_msg", 1);
+  ros::Publisher matlab_sensor1_pub = n.advertise<geometry_msgs::Transform>("matlab_sensor1_msg", 1);
+  ros::Publisher matlab_sensor2_pub = n.advertise<geometry_msgs::Transform>("matlab_sensor2_msg", 1);
+
   tf::TransformBroadcaster *broadcaster = 0;
   if(publish_tf) 
     broadcaster = new tf::TransformBroadcaster();
@@ -153,6 +158,10 @@ int main(int argc, char **argv)
     trakstar::TrakstarMsg msg_raw;
     msg_raw.header.stamp = ros::Time::now();
     msg_raw.n_tracker = num_sen;
+
+    //publish matlab msg
+    geometry_msgs::Transform matlab_sensor1_msg;
+    geometry_msgs::Transform matlab_sensor2_msg;
 
     std::vector<geometry_msgs::TransformStamped> transforms(num_sen);
 
@@ -181,9 +190,14 @@ int main(int argc, char **argv)
 	tf::transformTFToMsg(tf::Transform(mat,pos), transforms[i].transform);
 
 	msg.transform[i]=transforms[i].transform;
+    matlab_sensor1_msg = transforms[0].transform;
+    matlab_sensor2_msg = transforms[1].transform;
+
     }
     trakstar_pub.publish(msg);
     trakstar_raw_pub.publish(msg_raw);
+    matlab_sensor1_pub.publish(matlab_sensor1_msg);
+    matlab_sensor2_pub.publish(matlab_sensor2_msg);
 
 
     if(broadcaster)
